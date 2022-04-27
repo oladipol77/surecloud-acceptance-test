@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'pl.allegro.tech.build.axion-release' version '1.10.2'
+}
+
+scmVersion {
+    versionIncrementer 'incrementMinor'
+    repository {
+        def gitCredentialsCombined = System.getenv()['GIT_CREDENTIALS']
+        if (gitCredentialsCombined) {
+            customUsername = gitCredentialsCombined.split(':')[0]
+            customPassword = gitCredentialsCombined.split(':')[1]
+        }
+    }
+}
+
+group 'com.surecloud'
+version scmVersion.version
+
+sourceCompatibility = 17
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    cucumberVersion = '7.2.3'
+    seleniumVersion = "3.141.59"
+    webDriverManagerVersion = '5.0.2'
+}
+
+dependencies {
+    implementation "org.seleniumhq.selenium:selenium-server:${seleniumVersion}",
+            "org.seleniumhq.selenium:selenium-java:${seleniumVersion}",
+            "io.github.bonigarcia:webdrivermanager:${webDriverManagerVersion}"
+
+    testImplementation "io.cucumber:cucumber-java:${cucumberVersion}",
+            "io.cucumber:cucumber-core:${cucumberVersion}",
+            "io.cucumber:cucumber-testng:${cucumberVersion}",
+            "io.cucumber:cucumber-picocontainer:${cucumberVersion}"
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+test {
+    useTestNG()
+    jvmArgs([
+        "-Dcucumber.filter.tags=${project.property('cucumber.tags')}",
+        "-Ddataproviderthreadcount=${project.property('cucumber.testThreads')}",
+        "-Dcucumber.publish.quiet=true"
+    ])
+    scanForTestClasses = false
+    testLogging.showStandardStreams = true
+}
